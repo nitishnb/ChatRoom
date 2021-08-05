@@ -1,44 +1,59 @@
 import socket
-import threading                                                #Libraries import
+import threading
 
-host = '127.0.0.1'                                                      #LocalHost
-port = 7976                                                             #Choosing unreserved port
+#LocalHost
+host = '127.0.0.1'
+#Choosing unreserved port
+port = 12346
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)              #socket initialization
-server.bind((host, port))                                               #binding host and port to socket
+#socket initialization, IPv4 protocol domain, TCP communication type
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+#binding host and port(socket address) to socket
+server.bind((host, port))
+
+#listens for 10 active connections. This number can be increased as per convenience
 server.listen(10)
 
-clients = []
-nicknames = []
+print("Server is Up!")
+print("Waiting for connections")
 
-def broadcast(message, c):                                                 #broadcast function declaration
+clients = []
+usernames = []
+
+def broadcast(message, c):
+    # broadcast function declaration
     for client in clients:
+        # broadcast msg to every clients except the sender client
         if(client != c):
                 client.send(message)
 
 def handle(client):
     while True:
-        try:                                                            #recieving valid messages from client
+        # recieving valid messages from client
+        try:
             message = client.recv(1024)
             broadcast(message, client)
-        except:                                                         #removing clients
+        except:
+            #removing clients
             index = clients.index(client)
             clients.remove(client)
             client.close()
-            nickname = nicknames[index]
-            broadcast('{} left!'.format(nickname).encode('ascii'), "")
-            nicknames.remove(nickname)
+            username = usernames[index]
+            broadcast('{} left!'.format(username).encode('ascii'), "")
+            usernames.remove(username)
             break
 
-def receive():                                                          #accepting multiple clients
+def receive():
+    # accepting multiple clients
     while True:
         client, address = server.accept()
         print("Connected with {}".format(str(address)))
-        client.send('NICKNAME'.encode('ascii'))
+        client.send('UserName'.encode('ascii'))
         nickname = client.recv(1024).decode('ascii')
-        nicknames.append(nickname)
+        usernames.append(nickname)
         clients.append(client)
-        print("Nickname is {}".format(nickname))
+        print("User is {}".format(nickname))
         broadcast("{} joined!".format(nickname).encode('ascii'), "")
         client.send('Connected to server!'.encode('ascii'))
         thread = threading.Thread(target=handle, args=(client,))

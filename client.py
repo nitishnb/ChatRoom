@@ -1,29 +1,39 @@
 import socket
 import threading
-nickname = raw_input("Choose your nickname: ")
 
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)      #socket initialization
-client.connect(('127.0.0.1', 7976))                             #connecting client to server
+username = raw_input("UserName : ")
+
+#socket initialization, IPv4 protocol domain, TCP communication type
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+#connecting client to server
+client.connect(('127.0.0.1', 7976))
 
 def receive():
-    while True:                                                 #making valid connection
+    while True:
+        # making valid connection
         try:
             message = client.recv(1024).decode('ascii')
-            if message == 'NICKNAME':
-                client.send(nickname.encode('ascii'))
+            if message == 'UserName':
+                client.send(username.encode('ascii'))
             else:
                 print(message)
-        except:                                                 #case on wrong ip/port details
+        except:
+            # case on wrong ip/port details
             print("An error occured!")
             client.close()
             break
 
+#message layout
 def write():
-    while True:                                                 #message layout
-        message = '{}: {}'.format(nickname, raw_input(''))
+    while True:
+        message = '{}: {}'.format(username, raw_input(''))
         client.send(message.encode('ascii'))
 
-receive_thread = threading.Thread(target=receive)               #receiving multiple messages
+#receiving multiple messages
+receive_thread = threading.Thread(target=receive)
 receive_thread.start()
-write_thread = threading.Thread(target=write)                   #sending messages
+
+#sending messages
+write_thread = threading.Thread(target=write)
 write_thread.start()
